@@ -29,6 +29,7 @@ from oie_readers.propsReader import PropSReader
 
 from oie_readers.goldReader import GoldReader
 from matcher import Matcher
+import csv
 
 class Benchmark:
     ''' Compare the gold OIE dataset against a predicted equivalent '''
@@ -44,6 +45,10 @@ class Benchmark:
         
         y_true = []
         y_scores = []
+        
+        truePositives = []
+        falsePositives = []
+        falseNegatives = []
         
         correctTotal = 0
         unmatchedCount = 0        
@@ -65,6 +70,7 @@ class Benchmark:
                 found = False
                 
                 for predictedEx in predictedExtractions:
+                    
                     if output_fn in predictedEx.matched:
                         # This predicted extraction was already matched against a gold extraction
                         # Don't allow to match it again
@@ -74,21 +80,37 @@ class Benchmark:
                                     predictedEx, 
                                     ignoreStopwords = True, 
                                     ignoreCase = True):
-                        
+                        print(predictedEx.__dict__)
                         y_true.append(1)
                         y_scores.append(predictedEx.confidence)
                         predictedEx.matched.append(output_fn)
+                        truePositives.append(predictedEx)
                         found = True
                         break
                     
                 if not found:
+                    falseNegatives.append(goldEx)
                     unmatchedCount += 1
                     
             for predictedEx in [x for x in predictedExtractions if (output_fn not in x.matched)]:
                 # Add false positives
                 y_true.append(0)
                 y_scores.append(predictedEx.confidence)
-                
+                falsePositives.append(predictedEx)
+        
+        print('======================false negatives========================')
+        tp = []
+        for i in truePositives :
+            tp.append('{0}\t{1}\t{2}\t{3}\n'.format(i.sent,i.pred,i.args[0],i.args[1]))
+        
+        fn = []
+        for i in falseNegatives :
+            fn.append('{0}\t{1}\t{2}\t{3}\n'.format(i.sent,i.pred,i.args[0],i.args[1]))
+
+        fp = []
+        for i in falsePositives :
+            fp.append('{0}\t{1}\t{2}\t{3}\n'.format(i.sent,i.pred,i.args[0],i.args[1]))
+
         y_true = y_true
         y_scores = y_scores
         
@@ -102,7 +124,20 @@ class Benchmark:
             fout.write('{0}\t{1}\n'.format("Precision", "Recall"))
             for cur_p, cur_r in sorted(zip(p, r), key = lambda (cur_p, cur_r): cur_r):
                 fout.write('{0}\t{1}\n'.format(cur_p, cur_r))
+
+        # write true positive, false positive, false negative data.
+        self.writeResult(output_fn+'.tp',tp)
+        self.writeResult(output_fn+'.fp',fp)
+        self.writeResult(output_fn+'.fn',fn)
     
+    @staticmethod
+    def writeResult(filename, a):
+        # write false positives
+        with open(filename, 'w') as fout:
+            fout.write('sentence\tpredicate\tsubject\tobject\n')
+            for i in a:
+                fout.write(i)
+
     @staticmethod
     def prCurve(y_true, y_scores, recallMultiplier):
         # Recall multiplier - accounts for the percentage examples unreached by 

@@ -159,4 +159,12 @@ Finally, try running:
 
 This will create the [Precision Recall figure](./eval/eval.png) using the output of OIE parsers in [systems_output](systems_output).
 
-
+# Installing with Pipenv
+install pipenv python package managment tool (https://docs.pipenv.org/). Then run
+```bash
+pipenv install
+```
+you'll be asked to use the pipenv shell.  Run
+```bash
+pipenv shell
+```
