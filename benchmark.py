@@ -60,6 +60,8 @@ class Benchmark:
                 # The extractor didn't find any extractions for this sentence
                 for goldEx in goldExtractions:   
                     unmatchedCount += len(goldExtractions)
+                    for i in goldExtractions :
+                        falseNegatives.append(i)
                     correctTotal += len(goldExtractions)
                 continue
                 
@@ -122,6 +124,8 @@ class Benchmark:
         # to get to true recall we do r' * (|True in what's covered by extractor| / |True in gold|) = |true in what's covered| / |true in gold|
         p, r = Benchmark.prCurve(np.array(y_true), np.array(y_scores),
                        recallMultiplier = ((correctTotal - unmatchedCount)/float(correctTotal)))
+
+        print('unmatchedCount',unmatchedCount,'correctTotal',correctTotal, "fn+tp",len(falseNegatives)+len(truePositives),"nm+tp",unmatchedCount+len(truePositives))
 
         # write PR to file
         with open(output_fn, 'w') as fout:
