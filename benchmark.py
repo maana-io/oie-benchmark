@@ -105,6 +105,10 @@ class Benchmark:
         
         fn = []
         for i in falseNegatives :
+            print('i',i.sent,i.pred,i.args)
+            if(len(i.args)==1):
+                i.args.append('')
+            
             fn.append('{0}\t{1}\t{2}\t{3}\n'.format(i.sent,i.pred,i.args[0],i.args[1]))
 
         fp = []
